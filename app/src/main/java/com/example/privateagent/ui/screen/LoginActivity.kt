@@ -2,6 +2,7 @@ package com.example.privateagent.ui.screen
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.compose.material3.Button
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -37,12 +38,16 @@ import com.example.privateagent.data.auth.AuthState
 import com.example.privateagent.data.auth.SessionManager
 import com.example.privateagent.ui.theme.PrivateAgentTheme
 import com.example.privateagent.ui.viewmodel.AuthViewModel
+import com.example.samplesdk.VersionUtils
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val authViewModel: AuthViewModel by viewModels()
+
+        val version = VersionUtils.getMessage()
+        Toast.makeText(applicationContext, version, Toast.LENGTH_SHORT).show()
 
         enableEdgeToEdge()
         setContent {

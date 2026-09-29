@@ -19,6 +19,12 @@ pipeline {
             quickFilterEnabled: true,
             description: '빌드할 Git 브랜치를 선택하세요.'
         )
+
+        choice(
+            name: 'BUILD_TYPE',
+            choices: ['debug', 'release'],
+            description: '빌드 타입을 선택하세요.'
+        )
     }
 
     options {
@@ -59,13 +65,22 @@ pipeline {
 
         stage('Unit Test') {
             steps {
-                sh './gradlew --no-daemon testDebugUnitTest'
+                script {
+                    def variant = params.BUILD_TYPE.capitalize()
+
+                    sh "./gradlew --no-daemon test${variant}UnitTest"
+                }
             }
         }
 
-        stage('Assemble Debug') {
+        stage('Assemble') {
             steps {
-                sh './gradlew --no-daemon assembleDebug'
+                script {
+                    def variant = params.BUILD_TYPE.capitalize()
+
+                    echo "Build type: ${params.BUILD_TYPE}"
+                    sh "./gradlew --no-daemon assemble${variant}"
+                }
             }
         }
     }
@@ -73,19 +88,19 @@ pipeline {
     post {
         success {
             sh '''
-                OUTPUT_DIR="${APK_OUTPUT_ROOT}/build-${BUILD_NUMBER}"
+                OUTPUT_DIR="${APK_OUTPUT_ROOT}/${BUILD_TYPE}/build-${BUILD_NUMBER}"
+                APK_DIR="app/build/outputs/apk/${BUILD_TYPE}"
 
                 mkdir -p "$OUTPUT_DIR"
-
-                cp app/build/outputs/apk/debug/app-debug.apk \
-                   "$OUTPUT_DIR/private-agent-debug-${BUILD_NUMBER}.apk"
+                cp "$APK_DIR"/*.apk "$OUTPUT_DIR/"
 
                 echo "APK copied to:"
-                echo "$OUTPUT_DIR/private-agent-debug-${BUILD_NUMBER}.apk"
+                echo "$OUTPUT_DIR"
+                ls -la "$OUTPUT_DIR"
             '''
 
             archiveArtifacts(
-                artifacts: 'app/build/outputs/apk/debug/*.apk',
+                artifacts: 'app/build/outputs/apk/**/*.apk',
                 fingerprint: true
             )
         }

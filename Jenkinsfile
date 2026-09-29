@@ -5,6 +5,7 @@ pipeline {
         JAVA_HOME = '/usr/local/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home'
         ANDROID_HOME = '/Users/kimseongjin/Library/Android/sdk'
         ANDROID_SDK_ROOT = '/Users/kimseongjin/Library/Android/sdk'
+        APK_OUTPUT_ROOT = '/Users/kimseongjin/Desktop/jenkins-artifacts/private-agent-android'
     }
 
     parameters {
@@ -66,6 +67,27 @@ pipeline {
             steps {
                 sh './gradlew --no-daemon assembleDebug'
             }
+        }
+    }
+
+    post {
+        success {
+            sh '''
+                OUTPUT_DIR="${APK_OUTPUT_ROOT}/build-${BUILD_NUMBER}"
+
+                mkdir -p "$OUTPUT_DIR"
+
+                cp app/build/outputs/apk/debug/app-debug.apk \
+                   "$OUTPUT_DIR/private-agent-debug-${BUILD_NUMBER}.apk"
+
+                echo "APK copied to:"
+                echo "$OUTPUT_DIR/private-agent-debug-${BUILD_NUMBER}.apk"
+            '''
+
+            archiveArtifacts(
+                artifacts: 'app/build/outputs/apk/debug/*.apk',
+                fingerprint: true
+            )
         }
     }
 }
